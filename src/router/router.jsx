@@ -12,7 +12,7 @@ function AppRouter() {
     return (
         <BrowserRouter>
         <Routes>
-            <Route path="/chat"  element={myUser ? <ChatPage /> : <Navigate to="/login" />}  />
+            <Route path="/"  element={myUser ? <ChatPage /> : <Navigate to="/login" />}  />
             <Route path="/login" element={!myUser ? <LoginPage /> : <Navigate to="/chat" />} />
             <Route path="/signup" element={!myUser ? <SignupPage /> : <Navigate to="/chat" />} />
         </Routes>
