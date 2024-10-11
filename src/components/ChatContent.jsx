@@ -35,7 +35,7 @@ function HomeContainer() {
 
   const [mess, setMess] = useState([]);
 
-  const [tempMess, setTempMess] = useState([]);
+  const [allMess, setAllMess] = useState([]);
 
   const [search, setSearch] = useState("");
 
@@ -48,8 +48,6 @@ function HomeContainer() {
   const [searchParam] = useSearchParams();
 
   const navigate = useNavigate();
-
-  const arrRef = useRef()
 
   //  <<<-------------------- Create ChatID -------------------->>>
 
@@ -119,14 +117,15 @@ function HomeContainer() {
 
   function getMessage() {
     let passArr = []
-    const q = query(collection(db, "Messages"), orderBy("timeStamp"), where("chatID", "==", chatID(chatters?.uid)));
+    // const q = query(collection(db, "Messages"), orderBy("timeStamp"), where("chatID", "==", chatID(chatters?.uid)));
+    const q = collection(db, "Messages");
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       let change = querySnapshot._snapshot.docChanges[querySnapshot._snapshot.docChanges.length - 1]?.doc.data.value.mapValue.fields.chatID.stringValue;
       const arr = [];
       querySnapshot.forEach((doc) => {
           arr.push(doc.data());
       });
-        setMess(arr);
+        setAllMess(arr);
     });
   setIsLoading(false);
 }
@@ -186,6 +185,14 @@ function HomeContainer() {
   
   useEffect(() => {
       getMessage();
+      let arr = []
+      allMess.forEach((v) => {
+        if (v.chatID == chatters.chatID) {
+          arr.push(v);
+        }
+      });
+      console.log(arr)
+      setMess(arr)
     selectFun(chatters);
   }, [chatters])
   
