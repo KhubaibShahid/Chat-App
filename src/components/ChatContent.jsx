@@ -15,7 +15,7 @@ import {
   MessageSeparator
 } from "@chatscope/chat-ui-kit-react";
 import HomeHeader from "./HomeHeader";
-import { useState, useEffect, useContext, useMemo } from "react";
+import { useState, useEffect, useContext, useMemo ,useRef } from "react";
 import { ActiveData } from "../config/context";
 import DP from "../assets/default-profile.png";
 import {
@@ -35,6 +35,8 @@ function HomeContainer() {
 
   const [mess, setMess] = useState([]);
 
+  const [tempMess, setTempMess] = useState([]);
+
   const [search, setSearch] = useState("");
 
   const [isSearch, setIsSearch] = useState(false);
@@ -46,6 +48,8 @@ function HomeContainer() {
   const [searchParam] = useSearchParams();
 
   const navigate = useNavigate();
+
+  const arrRef = useRef()
 
   //  <<<-------------------- Create ChatID -------------------->>>
 
@@ -65,22 +69,16 @@ function HomeContainer() {
   }
 
 
-
-
-
-
-
   //  <<<-------------------- Send Messages -------------------->>>
 
   async function sendMess(value, fr) {
-    // console.log(fr)
+
     let count = 1;
     if (fr[chatID(fr.uid)]?.recCount) {
       count = fr[chatID(fr.uid)].recCount + 1;
     }
 
     let text = value.trim();
-    // console.log(text)
     let date = serverTimestamp();
 
     await addDoc(collection(db, "Messages"), {
@@ -119,20 +117,19 @@ function HomeContainer() {
 
   // <<<-------------------- get Messages -------------------->>>
 
-  async function getMessage() {
-
-      const q = query(collection(db, "Messages"), orderBy("timeStamp"), where("chatID", "==", chatID(chatters?.uid)));
-      const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        const arr = [];
-        querySnapshot.forEach((doc) => {
+  function getMessage() {
+    let passArr = []
+    const q = query(collection(db, "Messages"), orderBy("timeStamp"), where("chatID", "==", chatID(chatters?.uid)));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      let change = querySnapshot._snapshot.docChanges[querySnapshot._snapshot.docChanges.length - 1]?.doc.data.value.mapValue.fields.chatID.stringValue;
+      const arr = [];
+      querySnapshot.forEach((doc) => {
           arr.push(doc.data());
-        });
-        setMess(arr);
       });
-
-    setIsLoading(false);
-  }
-
+        setMess(arr);
+    });
+  setIsLoading(false);
+}
 
   let [chatters, setChatters] = useState(); //   open the selected chat 
 
@@ -160,53 +157,49 @@ function HomeContainer() {
   }
 
   async function selectFun(c) {
-
-    if (c[chatID(c.uid)]?.sendCount) {
-      // console.log("done")
-      let userRef = doc(db, "Users", user.uid);
-      let frRef = doc(db, "Users", c.uid);
-      await updateDoc(userRef, {
-        [chatID(c.uid)]: {
-          lastMessage: c[chatID(c.uid)]?.lastMessage,
-          lastSender: c[chatID(c.uid)]?.lastSender,
-          recCount: 0
-        }
-      })
-      await updateDoc(frRef, {
-        [chatID(c.uid)]: {
-          lastMessage: c[chatID(c.uid)]?.lastMessage,
-          lastSender: c[chatID(c.uid)]?.lastSender,
-          sendCount: 0
-        }
-      })
-    } else {
-      // console.log("not done")
+    if (c) {
+      if (c[chatID(c.uid)]?.sendCount) {
+        let userRef = doc(db, "Users", user.uid);
+        let frRef = doc(db, "Users", c.uid);
+        await updateDoc(userRef, {
+          [chatID(c.uid)]: {
+            lastMessage: c[chatID(c.uid)]?.lastMessage,
+            lastSender: c[chatID(c.uid)]?.lastSender,
+            recCount: 0
+          }
+        })
+        await updateDoc(frRef, {
+          [chatID(c.uid)]: {
+            lastMessage: c[chatID(c.uid)]?.lastMessage,
+            lastSender: c[chatID(c.uid)]?.lastSender,
+            sendCount: 0
+          }
+        })
+      } else {
+        console.log("not done");
+      }
     }
   }
-
   
   
   //  <<<------------------- Use Effect -------------------->>>
   
   useEffect(() => {
-    getMessage(chatters?.uid);
+      getMessage();
     selectFun(chatters);
   }, [chatters])
   
   useEffect(() => {
-
-    let c = friends.find((v) => v.uid == searchParam.get("id"));
-    if (c) {
-      selectFun(c);
-      setChatters(c);
-    }
-
+      let c = friends.find((v) => v.uid == searchParam.get("id"));
+      if (c) {
+        selectFun(c);
+        setChatters(c);
+      }
   }, [friends])
 
   useEffect(() => {
 
     getUsers();
-
   }, [])
 
   return (
@@ -281,7 +274,7 @@ function HomeContainer() {
             {isLoading ? <div className="w-full h-full flex justify-center items-center">
               <Spinner className=""></Spinner>
             </div>
-              : mess.map((v, i) => {
+              : mess && mess.map((v, i) => {
                 let time = new Date(v.sentTime).toLocaleTimeString();
                 time = time.split("");
                 time.splice(time.lastIndexOf(":"), 3);

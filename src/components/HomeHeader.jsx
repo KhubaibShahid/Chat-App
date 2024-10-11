@@ -25,7 +25,7 @@ function HomeHeader() {
         status : "unavailable",
         statusTime : date
       })
-      navigate("/login")
+      navigate("/")
       // Sign-out successful.
     }).catch((error) => {
       // An error happened.
