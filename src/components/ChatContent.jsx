@@ -77,7 +77,7 @@ function HomeContainer() {
     }
 
     let text = value.trim();
-    let date = serverTimestamp();
+    let date = serverTimestamp(); 
 
     await addDoc(collection(db, "Messages"), {
       message: value,
@@ -118,7 +118,7 @@ function HomeContainer() {
   function getMessage() {
     let passArr = []
     // const q = query(collection(db, "Messages"), orderBy("timeStamp"), where("chatID", "==", chatID(chatters?.uid)));
-    const q = collection(db, "Messages");
+    const q = query(collection(db, "Messages"), orderBy("timeStamp"));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       let change = querySnapshot._snapshot.docChanges[querySnapshot._snapshot.docChanges.length - 1]?.doc.data.value.mapValue.fields.chatID.stringValue;
       const arr = [];
