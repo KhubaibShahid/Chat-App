@@ -187,7 +187,7 @@ function HomeContainer() {
       getMessage();
       let arr = []
       allMess.forEach((v) => {
-        if (v.chatID == chatters.chatID) {
+        if (v.chatID == chatID(chatters.uid)) {
           arr.push(v);
         }
       });
